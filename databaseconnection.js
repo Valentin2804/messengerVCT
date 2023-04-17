@@ -1,3 +1,24 @@
+var http = require('http');
+var express = require('express');
+var bcrypt = require('bcrypt');
+var app = express();
+
+var publicDir = require('path').join(__dirname,'/public');
+app.use(express.urlencoded({ extended: true }));
+app.use(express.static(publicDir));
+const fs = require('fs');
+
+var mysql2 = require('mysql2');
+
+var con = mysql2.createConnection({
+    host: "localhost",
+    user: "root",
+    password: "0000",
+    database: "VOT"
+  });
+
+app.listen(5000);
+
 async function insertUser(username, password){
 
     var userExists = await checkUserExists(username);
