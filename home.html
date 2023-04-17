@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="VCT web app home page" content="VCT">
+        <meta name="keywords" content="HTML, CSS, JavaScript, NodeJS">
+        <meta name="VCT" content="VCT">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>VCT Chat Webpage</title>
+
+        <script>
+            var currentUserName = "__USERNAME__";
+            var openedContactUserName = "";
+            var lastMessageId = 0;
+
+            function initialize(){
+                showContacts();
+            }
+
+            function showContacts(username){
+                var contactsData = JSON.parse(getContacts(username));
+
+                switch(contactsData.res){
+                    case "NO_CONTACT_INFO":
+                        window.alert("no contact info");
+                        break;
+                    case "CONTACT_INFO":
+                        //Show contact info by looping through contact array
+                        window.alert(contactsData);
+                        break;
+                    default:
+                        window.alert(contactsData.res);
+                }
+            }
+
+            function getContacts(username){
+                const xhr = new XMLHttpRequest();
+                var params = {user: username};
+                var data = JSON.stringify(params);
+
+                xhr.open('POST', '/get/user/contacts', true);
+                xhr.setRequestHeader("Content-Type", "application/json");
+                xhr.onload = function(){
+                    if(this.readyState == 4 && this.status == 200){
+                        var responseData = JSON.parse(this.response);
+                        return responseData;
+                    }
+                };
+                xhr.send(data);
+            }
+
+            function openContact(contactUserName){
+                if(openedContactUserName == ""){
+                    openedContactUserName = contactUserName;
+                    //Open chat with contact
+                }else{
+                    //Delete chat with previously opened contact
+                    openedContactUserName = contactUserName;
+                    //Open chat with contact
+                    //Get last message id
+                    lastMessageId = getLastMessageId();
+                }
+            }
+
+            function getNewestMessages(lastMessageId){
+                //Send ajax request to get new messages by sending the id of the last message
+            }
+
+            function logoutUser(){
+                currentUserName = "";
+                openedContactUserName = "";
+                lastMessageId = 0;
+
+                window.location.href = "/signin";
+                return;
+            }
+        </script>
+
+        <style>
+        /* Set the font and background color for the page */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f2f2f2;
+        }
+
+        /* Center the main content and add some padding */
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Style the page header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 36px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        /* Style the navbar */
+        .navbar {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .navbar button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin-left: 10px;
+        }
+
+        .navbar button:hover {
+            background-color: #0062cc;
+        }
+
+        /* Style the button to add new chats */
+        .add-chat-button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .add-chat-button:hover {
+            background-color: #0062cc;
+        }
+
+        /* Style the button to switch between chats */
+        .chat-button {
+            padding: 10px 20px;
+            background-color: #fff;
+            color: #333;
+            border: none;
+            border-radius: 5px;
+            margin-right: 10px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .chat-button.active {
+            background-color: #007bff;
+            color: #fff;
+        }
+
+        .chat-button:hover {
+            background-color: #e6e6e6;
+        }
+
+        /* Style the chat section */
+        .chat-section {
+            width: 100%;
+            height: 500px;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            padding: 10px;
+            overflow-y: scroll;
+        }
+
+        /* Style the chat bubbles for sent and received messages */
+        .chat-bubble {
+            display: inline-block;
+            padding: 10px;
+            border-radius: 20px;
+            margin-bottom: 10px;
+        }
+
+        .sent {
+            background-color: #dcf8c6;
+            float: right;
+        }
+
+        .received {
+            background-color: #fff;
+            float: left;
+        }
+        </style>
+    </head>
+    <body onload="initialize()">
+        <div class="container">
+            <div class="header">
+                <h1>VCT Chat Webpage</h1>
+                <div class="navbar">
+                <!--<button>Login</button>-->
+                <button onclick="logoutUser()">Logout</button>
+                </div>
+            </div>
+            <div>
+                <!-- Create buttons for each person you want to chat with -->
+                <button class="chat-button">Person 1</button>
+                <button class="chat-button">Person 2</button>
+                <button class="chat-button">Person 3</button>
+                <button class="add-chat-button">Add Chat</button>
+            </div>
+            <div class="chat-section">
+                <!-- Display the chat messages for the currently active chat -->
+                <div id="person1-chat" class="chat active-chat">
+                <div class="chat-bubble sent">Hi there!</div>
+                <div class="chat-bubble received">Hey, what's up?</div>
+                </div>
+                <div id="person2-chat" class="chat">
+                <div class="chat-bubble sent">Hello!</div>
+                <div class="chat-bubble received">Not much, how about you?</div>
+                </div>
+                <div id="person3-chat" class="chat">
+                <div class="chat-bubble sent">Hey!</div>
+                <div class="chat-bubble received">Hey, long time no see!</div>
+                <div class="chat-bubble sent">Yeah, it's been a while.</div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>
