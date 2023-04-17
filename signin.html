@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+
+<html lang="en">
+	<head>
+        <meta charset="UTF-8">
+        <meta name="VCT web app signin page" content="VCT">
+        <meta name="keywords" content="HTML, CSS, JavaScript, NodeJS">
+        <meta name="VCT" content="VCT">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>Login/Sign up Form</title>
+
+		<script>
+			// - VASKO - //
+            var signUpFormId = "signup-form";
+            var signUpFormUsernameId = "signup-username";
+            var signUpFormPasswordId = "signup-password";
+            var logInFormId = "login-form";
+            var logInFormUsernameId = "login-username";
+            var logInFormPasswordId = "login-password";
+
+			// - VASKO - //
+            function initialize(){
+				// - VESKO - //
+				const loginForm = document.getElementById("login-form");
+				const signupForm = document.getElementById("signup-form");
+				const switchToSignupLink = document.getElementById("switch-to-signup");
+				const switchToLoginLink = document.getElementById("switch-to-login");
+		
+				switchToSignupLink.addEventListener("click", function(event){
+					event.preventDefault();
+					loginForm.style.display = "none";
+					signupForm.style.display = "block";
+				});
+		
+				switchToLoginLink.addEventListener("click", function(event){
+					event.preventDefault();
+					loginForm.style.display = "block";
+					signupForm.style.display = "none";
+				});
+				// - VESKO - //
+
+				document.getElementById(signUpFormId).addEventListener("submit", function(event){
+                    event.preventDefault();
+
+                    var username = document.getElementById(signUpFormUsernameId).value;
+                    var password = document.getElementById(signUpFormPasswordId).value;
+                    var anySQLInjections = checkForSQLInjections(username,password);
+
+                    if(anySQLInjections == true){
+                        window.alert("Incorrect input");
+                    }else if(userExists(username,password) == true){
+                        window.alert("The given username is already taken");
+                    }else{
+                        const xhr = new XMLHttpRequest();
+                        var userCredentials = {
+                            user:username,
+                            pass:password
+                        };
+                        var userData = JSON.stringify(userCredentials);
+
+                        xhr.open('POST', '/user/signup', true);
+                        xhr.setRequestHeader("Content-Type", "application/json");
+                        xhr.onload = function(){
+                            if(this.readyState == 4 && this.status == 200){
+                                var responseData = JSON.parse(this.response);
+
+                                switch(responseData.res){
+                                    case "USER_SIGNED_UP":
+                                        var url = "/home?username=" + encodeURIComponent(username);
+                                        window.location.href = url;
+                                        return;
+                                    default:
+                                        window.alert(responseData.res);
+                                }
+                            }
+                        };
+                        xhr.send(userData);
+                    }
+                });
+                document.getElementById(logInFormId).addEventListener("submit", function(event){
+                    event.preventDefault();
+
+                    var username = document.getElementById(logInFormUsernameId).value;
+                    var password = document.getElementById(logInFormPasswordId).value;
+                    var anySQLInjections = checkForSQLInjections(username,password);
+
+                    if(anySQLInjections == true){
+                        window.alert("Incorrect input");
+                    }else if(userExists(username,password) == false){
+                        window.alert("There is no user with the given username");
+                    }else{
+                        const xhr = new XMLHttpRequest();
+                        var userCredentials = {
+                            user:username,
+                            pass:password
+                        };
+                        var userData = JSON.stringify(userCredentials);
+
+                        xhr.open('POST', '/user/login', true);
+                        xhr.setRequestHeader("Content-Type", "application/json");
+                        xhr.onload = function(){
+                            if(this.readyState == 4 && this.status == 200){
+                                var responseData = JSON.parse(this.response);
+
+                                switch(responseData.res){
+                                    case "USER_LOGGED_IN":
+                                        var url = "/home?username=" + encodeURIComponent(username);
+                                        window.location.href = url;
+                                        return;
+                                    default:
+                                        window.alert(responseData.res);
+                                }
+                            }
+                        };
+                        xhr.send(userData);
+                    }
+                });
+            }
+
+            function checkForSQLInjections(username,password){
+                const xhr = new XMLHttpRequest();
+                var userCredentials = {
+                    user:username,
+                    pass:password
+                };
+                var userData = JSON.stringify(userCredentials);
+
+                xhr.open('POST', '/check/userCredentials/sqlInjections', false);
+                xhr.setRequestHeader("Content-Type", "application/json");
+                xhr.onload = function(){
+                    if(this.readyState == 4 && this.status == 200){
+                        switch(this.responseText){
+                            case "INJECTIONS":
+                                return true;
+                                break;
+                            case "NO_INJECTIONS":
+                                return false;
+                                break;
+                            default:
+                                window.alert("Error in function checkForSQLInjections() (" + this.responseText + ") (" + this.response + ")");
+                        }
+                        responseReceived = true;
+                    }
+                };
+
+                xhr.send(userData);
+            }
+
+            function userExists(username,password){
+                const xhr = new XMLHttpRequest();
+                var userCredentials = {
+                    user:username,
+                    pass:password
+                };
+                var userData = JSON.stringify(userCredentials);
+
+                xhr.open('POST', '/check/userCredentials/userExists', false);
+                xhr.setRequestHeader("Content-Type", "application/json");
+                xhr.onload = function(){
+                    if(this.readyState == 4 && this.status == 200){
+                        switch(this.responseText){
+                            case "USER_EXISTS":
+                                return true;
+                                break;
+                            case "USER_NOT_EXISTS":
+                                return false;
+                                break;
+                            default:
+                                window.alert("Error in function userExists()");
+                        }
+                    }
+                };
+
+                xhr.send(userData);
+            }
+
+            function convertToHTMLString(data){
+                const codes = JSON.stringify(data).split(',');
+                const bytes = new Uint8Array(codes.length);
+
+                for(let i = 0; i < codes.length; i++){
+                    bytes[i] = parseInt(codes[i]);
+                }
+
+                const decoder = new TextDecoder();
+                const htmlString = decoder.decode(bytes);
+
+                return htmlString;
+            }
+		</script>
+
+		<style>
+			body {
+				background-color: #f2f2f2;
+				font-family: Arial, sans-serif;
+			}
+
+			.container {
+				margin: 50px auto;
+				width: 400px;
+				background-color: #fff;
+				padding: 20px;
+				border-radius: 10px;
+				box-shadow: 0 0 10px rgba(0,0,0,0.3);
+			}
+
+			h2 {
+				text-align: center;
+				margin-bottom: 20px;
+			}
+
+			label {
+				display: block;
+				margin-bottom: 5px;
+			}
+
+			input[type="text"],
+			input[type="email"],
+			input[type="password"] {
+				width: 100%;
+				padding: 10px;
+				border: none;
+				border-radius: 5px;
+				margin-bottom: 20px;
+			}
+
+			button[type="submit"] {
+				background-color: #4CAF50;
+				color: #fff;
+				padding: 10px;
+				border: none;
+				border-radius: 5px;
+				cursor: pointer;
+			}
+
+			button[type="submit"]:hover {
+				background-color: #3e8e41;
+			}
+
+			.switch-form {
+				margin-top: 20px;
+				text-align: center;
+			}
+
+			.switch-form a {
+				color: #4CAF50;
+				text-decoration: none;
+				font-weight: bold;
+				margin-left: 5px;
+				margin-right: 5px;
+			}
+		</style>
+	</head>
+	<body onload="initialize()">
+		<div class="container">
+			<h2>Login/Sign up Form</h2>
+			<form id="login-form">
+				<label for="login-username">Username</label>
+				<input type="text" id="login-username" name="login-username" required>
+
+				<label for="login-password">Password</label>
+				<input type="password" id="login-password" name="login-password" required>
+
+				<button type="submit">Login</button>
+			</form>
+			<form id="signup-form" style="display:none">
+				<label for="signup-username">Username</label>
+				<input type="text" id="signup-username" name="signup-username" required>
+
+				<label for="signup-email">Email</label>
+				<!--<input type="email" id="signup-email" name="signup-email" required>-->
+				<input type="email" id="signup-email" name="signup-email">
+
+				<label for="signup-password">Password</label>
+				<input type="password" id="signup-password" name="signup-password" required>
+
+				<button type="submit">Sign Up</button>
+			</form>
+			<div class="switch-form">
+				<span>Don't have an account?</span>
+				<a href="#" id="switch-to-signup">Sign up</a>
+			</div>
+			<div class="switch-form">
+				<span>Already have an account?</span>
+				<a href="#" id="switch-to-login">Login</a>
+			</div>
+		</div>
+	</body>
+</html>
